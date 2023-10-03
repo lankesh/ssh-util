@@ -3,14 +3,14 @@ display_options() {
     option2="$2"
     if [ -z "$option2" ]
     then
-        printf "%-30s\n" "$option1"
+        printf "%-50s\n" "$option1"
     else 
         option3="$3"
         if [ -z "$option3" ]
         then
-            printf "%-30s %-30s\n" "$option1" "$option2"
+            printf "%-50s %-50s\n" "$option1" "$option2"
         else
-            printf "%-30s %-30s %-30s\n" "$option1" "$option2" "$option3"
+            printf "%-50s %-50s %-50s\n" "$option1" "$option2" "$option3"
         fi
     fi
 }
