@@ -1,0 +1,61 @@
+display_options() {
+    option1="$1"
+    option2="$2"
+    if [ -z "$option2" ]
+    then
+        printf "%-30s\n" "$option1"
+    else 
+        option3="$3"
+        if [ -z "$option3" ]
+        then
+            printf "%-30s %-30s\n" "$option1" "$option2"
+        else
+            printf "%-30s %-30s %-30s\n" "$option1" "$option2" "$option3"
+        fi
+    fi
+}
+
+split_pem_file() {
+    pem_file=$1
+    ip_address=$(echo $pem_file | cut -d'@' -f3 | sed 's/.pem//g')
+    user=$(echo $pem_file | cut -d'@' -f2)
+    server_name=$(echo $pem_file | cut -d'@' -f1)
+    if [[ $server_name == *" "* ]]
+    then
+        server_name=$(echo $server_name | sed -e 's/ /@/g')
+        server_name=$(echo $server_name | sed -e 's/_\([a-z]\)/\U\1/g')
+    fi
+    echo "$ip_address $user $server_name"
+}
+
+get_option_name() {
+    pem_file=$1
+    output=$(split_pem_file $pem_file)
+    ip_address=$(echo $output | cut -d' ' -f1)
+    user=$(echo $output | cut -d' ' -f2)
+    server_name=$(echo $output | cut -d' ' -f3)
+    server_name=$(echo $server_name | sed -e 's/@/ /g')
+    echo "$server_name"
+}
+
+connect() {
+    pem_file=$1
+    output=$(split_pem_file $pem_file)
+    ip_address=$(echo $output | cut -d' ' -f1)
+    user=$(echo $output | cut -d' ' -f2)
+    server_name=$(echo $output | cut -d' ' -f3)
+    echo "Connecting to $server_name <IP Address: $ip_address, User: $user>"
+    file=$WORKING_DIR/pem/$pem_file
+    if [ -e "$file" ]; then
+        current_permissions=$(ls -l "$file" | awk '{print $1}')
+        if [ "$current_permissions" != "-r--------" ]; then
+            chmod 400 "$file"
+            echo "Permissions for $file have been set to 400."
+        else
+            echo "Permissions for $file are already 400."
+        fi
+    else
+        echo "File $file does not exist."
+    fi
+    ssh -i "$file" $user@$ip_address
+}

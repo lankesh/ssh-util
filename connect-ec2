@@ -1,0 +1,60 @@
+#!/bin/bash
+
+export WORKING_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+source "$WORKING_DIR/common/common"
+
+options_list=()
+pem_files=()
+for pem_file in $(ls "$WORKING_DIR/pem/" | sort -n)
+do
+    options_list+=($(get_option_name "$pem_file"))
+    pem_files+=("$pem_file")
+done
+options_list+=("exit")
+
+options_list_size=${#options_list[@]}
+
+for (( i=0; i<$options_list_size; i+=3 ))
+do
+    idx=$(($i+1))
+    idx_prefix=""
+    if [ $idx -lt 10 ]
+    then
+        idx_prefix="0"
+    fi
+    if [ $i -le $(($options_list_size - 3)) ]
+    then
+        idx2=$(($idx+1))
+        idx3=$(($idx+2))
+        display_options "$idx_prefix$idx. ${options_list[$i]}" "$idx_prefix$idx2. ${options_list[$i+1]}" "$idx_prefix$idx3. ${options_list[$i+2]}"
+    elif [ $i -le $(($options_list_size - 2)) ]
+    then
+        idx2=$(($idx+1))
+        display_options "$idx_prefix$idx. ${options_list[$i]}" "$idx_prefix$idx2. ${options_list[$i+1]}"
+    elif [ $i -le $(($options_list_size - 1)) ]
+    then
+        display_options "$idx_prefix$idx. ${options_list[$i]}"
+    fi
+done
+
+read -p "Enter your choice [ 1 - $options_list_size ]: " choice
+
+if [ -z "$choice" ] || ! [[ $choice =~ ^[0-9]+$ ]] || [ $choice -gt $options_list_size ]
+then
+    echo "Invalid choice. Please enter a number between 1 and $options_list_size."
+    exit 1
+fi
+
+choice=$(echo $choice | sed 's/^0*//')
+
+if [ "${options_list[$(($choice-1))]}" == "exit" ]
+then
+    exit 0
+elif [[ " ${options_list[@]} " =~ " ${options_list[$(($choice-1))]} " ]]
+then
+    connect ${pem_files[$(($choice-1))]}
+else
+    echo "Invalid choice"
+    exit 1
+fi
